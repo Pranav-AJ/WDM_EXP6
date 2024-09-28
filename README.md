@@ -16,70 +16,76 @@ sklearn to demonstrate Information Retrieval using the Vector Space Model.
 
 ### Program:
 
-```
-import nltk
-nltk.download('punkt')
-nltk.download('stopwords')
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-import string
+    import requests
+    from bs4 import BeautifulSoup
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+    from nltk.tokenize import word_tokenize
+    from nltk.corpus import stopwords
+    import string
+    import nltk
 
-#Sample documents
-documents = [
-    "This is the first document.",
-    "This document is the second document.",
-    "And this is the third one.",
-    "Is this the first document?",
-]
+    nltk.download('punkt')
+    nltk.download('stopwords')
 
-#Preprocessing function to tokenize and remove stopwords/punctuation
-def preprocess_text(text):
-    tokens = word_tokenize(text.lower())
-    tokens = [token for token in tokens if token not in stopwords.words("english") and token not in string.punctuation]
-    return " ".join(tokens)
-    print(tokens)
+###### Sample documents stored in a dictionary
+    documents = {
+        "doc1": "This is the first document.",
+        "doc2": "This document is the second document.",
+        "doc3": "And this is the third one.",
+        "doc4": "Is this the first document?",
+    }
 
-#Preprocess documents
-preprocessed_docs = [preprocess_text(doc) for doc in documents]
+###### Preprocessing function to tokenize and remove stopwords/punctuation
+    def preprocess_text(text):
+        tokens = word_tokenize(text.lower())
+        tokens = [token for token in tokens if token not in stopwords.words("english") and token not in               string.punctuation]
+        return " ".join(tokens)
 
-#Construct TF-IDF matrix
-tfidf_vectorizer = TfidfVectorizer()
-tfidf_matrix = tfidf_vectorizer.fit_transform(preprocessed_docs)
+###### Preprocess documents and store them in a dictionary
+    preprocessed_docs = {doc_id: preprocess_text(doc) for doc_id, doc in documents.items()}
 
+###### Construct TF-IDF matrix
+    tfidf_vectorizer = TfidfVectorizer()
+    tfidf_matrix = tfidf_vectorizer.fit_transform(preprocessed_docs.values())
 
-# Calculate cosine similarity between query and documents
-def search(query, tfidf_matrix, tfidf_vectorizer):
-    preprocessed_query = preprocess_text(query)
-    query_vector = tfidf_vectorizer.transform([preprocessed_query])
+###### Calculate cosine similarity between query and documents
+    def search(query, tfidf_matrix, tfidf_vectorizer):
+         preprocessed_query = preprocess_text(query)
+         query_vector = tfidf_vectorizer.transform([preprocessed_query])
 
-    # Calculate cosine similarity between query and documents
-    similarity_scores = cosine_similarity(query_vector, tfidf_matrix)
+         # Calculate cosine similarity between query and documents
+         similarity_scores = cosine_similarity(query_vector, tfidf_matrix)
 
-    # Sort documents based on similarity scores
-    sorted_indexes = similarity_scores.argsort()[0][::-1]
+         # Sort documents based on similarity scores
+         sorted_indexes = similarity_scores.argsort()[0][::-1]
 
-    # Return sorted documents along with their similarity scores
-    results = [(documents[i], similarity_scores[0, i]) for i in sorted_indexes]
-    return results
+         # Return sorted documents along with their similarity scores
+         results = [(list(preprocessed_docs.keys())[i],list(documents.values())[i],similarity_scores[0,i]) for i in sorted_indexes]
+         return results
 
-# Example query
-query = "This is the second document."
+###### Get input from user
+    query = input("Enter your query: ")
 
-# Perform search
-search_results = search(query, tfidf_matrix, tfidf_vectorizer)
+###### Perform search
+    search_results = search(query, tfidf_matrix, tfidf_vectorizer)
 
-# Display search results
-print("Query:", query)
-for result in search_results:
-    print("Document:", result[0])
-    print("Similarity Score:", result[1])
-    print("----------------------")
-```
+###### Display search results
+    print("Query:", query)
+    for i, result in enumerate(search_results, start=1):
+        print(f"\nRank: {i}")
+        print("Document ID:", result[0])
+        print("Document:", result[1])
+        print("Similarity Score:", result[2])
+        print("----------------------")
+
+###### Get the highest rank cosine score
+    highest_rank_score = max(result[2] for result in search_results)
+    print("The highest rank cosine score is:", highest_rank_score)
+
 ### Output:
 
-![image](https://github.com/user-attachments/assets/c1e771dd-e963-4dce-b9a8-dab4dcc97924)
+![image](https://github.com/user-attachments/assets/a6965342-ef8f-4a2c-8df0-0ba150a6525b)
 
 ### Result:
 
